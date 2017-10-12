@@ -766,6 +766,14 @@ func (arch *Archiver) Snapshot(ctx context.Context, p *restic.Progress, paths, t
 		return nil, restic.ID{}, errors.Fatal("no files/dirs saved, refusing to create empty snapshot")
 	}
 
+	psn, err := restic.LoadSnapshot(ctx, arch.repo, *sn.Parent)
+	if err != nil {
+		return nil, restic.ID{}, err
+	}
+	if root.Subtree.Equal(*psn.Tree) {
+		return nil, restic.ID{}, errors.Fatal("tree matches parent, not creating snapshot")
+	}
+
 	// save index
 	err = arch.repo.SaveIndex(ctx)
 	if err != nil {
